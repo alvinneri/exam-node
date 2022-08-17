@@ -1,10 +1,16 @@
-const { TableValues } = require("../table");
+import { Request, Response, NextFunction } from "express";
+import { TableValueInterface, TableValues } from "../table";
 
-exports.postMessage = async (req, res, next) => {
+interface PayloadMessage {
+  conversation_id: string;
+  message: string;
+}
+
+const postMessage = async (req: Request, res: Response, next: NextFunction) => {
   const { body } = req;
-  const { conversation_id, message } = body;
+  const { conversation_id, message }: PayloadMessage = body;
 
-  let response = "";
+  let response: string = "";
 
   if (typeof conversation_id === "undefined") {
     return res.status(400).json({
@@ -25,9 +31,11 @@ exports.postMessage = async (req, res, next) => {
     });
   }
 
-  TableValues.every((value) => {
-    const messageRegex = new RegExp(message, "gi");
-    const result = value.message.match(messageRegex);
+  TableValues.every((value: TableValueInterface) => {
+    const messageRegex = new RegExp(message.toLowerCase(), "gi");
+    const result: RegExpMatchArray | null = value.message
+      .toLowerCase()
+      .match(messageRegex);
     if (result && result.length) {
       response = value.response;
       return false;
@@ -46,4 +54,8 @@ exports.postMessage = async (req, res, next) => {
     response_id: conversation_id,
     response: response,
   });
+};
+
+export default {
+  postMessage,
 };
